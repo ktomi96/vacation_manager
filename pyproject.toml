@@ -6,10 +6,19 @@ authors = ["ktomi96 <kokai.tamas.96@gmail.com>"]
 
 [tool.poetry.dependencies]
 python = "^3.10"
-requests = "^2.28.1"
 Flask = "^2.2.2"
+Flask-SQLAlchemy = "^2.5.1"
+Flask-Login = "^0.6.2"
+python-dotenv = "^0.21.0"
+Jinja2 = "^3.1.2"
+MarkupSafe = "^2.1.1"
+oauthlib = "^3.2.0"
+requests = "^2.28.1"
+pyOpenSSL = "^22.0.0"
+
 
 [tool.poetry.dev-dependencies]
+autopep8 = "^1.7.0"
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]
