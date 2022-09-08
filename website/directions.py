@@ -1,7 +1,7 @@
 # Python standard libraries
 import json
 import os
-import sqlite3
+
 
 # Third party libraries
 from flask import Flask, redirect, request, url_for, render_template
@@ -17,8 +17,12 @@ import requests
 from dotenv import load_dotenv
 
 # Internal imports
-from db import init_db_command
-from user import User
+#sqlite implementaion
+#from db import init_db_command
+#from user import User
+#sqlachemy impl
+from website import app, login_manager, db
+from website.models import User
 
 # Configuration
 load_dotenv()
@@ -29,13 +33,11 @@ GOOGLE_DISCOVERY_URL = (
 )
 
 # Flask app setup
-app = Flask(__name__)
-app.secret_key = os.environ.get("SECRET_KEY") or os.urandom(24)
+
 
 # User session management setup
 # https://flask-login.readthedocs.io/en/latest
-login_manager = LoginManager()
-login_manager.init_app(app)
+
 
 
 @login_manager.unauthorized_handler
@@ -44,20 +46,20 @@ def unauthorized():
 
 
 # Naive database setup
-try:
-    init_db_command()
-except sqlite3.OperationalError:
+#try:
+    #init_db_command()
+#except sqlite3.OperationalError:
     # Assume it's already been created
-    pass
+    #pass
 
 # OAuth2 client setup
 client = WebApplicationClient(GOOGLE_CLIENT_ID)
 
 
 # Flask-Login helper to retrieve a user from our db
-@login_manager.user_loader
-def load_user(user_id):
-    return User.get(user_id)
+#@login_manager.user_loader
+#def load_user(user_id):
+    #return User.get(user_id)
 
 @app.route("/")
 def home():
@@ -136,12 +138,13 @@ def callback():
     # Create a user in our db with the information provided
     # by Google
     user = User(
-        id_=unique_id, name=users_name, email=users_email, profile_pic=picture
+        id_=unique_id, name=users_name, email=users_email, profile_pic=picture, auth_level='user'
     )
 
     # Doesn't exist? Add to database
-    if not User.get(unique_id):
-        User.create(unique_id, users_name, users_email, picture)
+    if not User.query.get(unique_id):
+        db.session.add(user)
+        db.session.commit()
 
     # Begin user session by logging the user in
     login_user(user)
@@ -161,5 +164,4 @@ def get_google_provider_cfg():
     return requests.get(GOOGLE_DISCOVERY_URL).json()
 
 
-if __name__ == "__main__":
-    app.run(ssl_context=('cert.pem', 'key.pem'))
+
