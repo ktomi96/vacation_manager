@@ -17,10 +17,10 @@ import requests
 from dotenv import load_dotenv
 
 # Internal imports
-#sqlite implementaion
+# sqlite implementaion
 #from db import init_db_command
 #from user import User
-#sqlachemy impl
+# sqlachemy impl
 from website import app, login_manager, db
 from website.models import User
 
@@ -39,31 +39,31 @@ GOOGLE_DISCOVERY_URL = (
 # https://flask-login.readthedocs.io/en/latest
 
 
-
 @login_manager.unauthorized_handler
 def unauthorized():
     return "You must be logged in to access this content.", 403
 
 
 # Naive database setup
-#try:
-    #init_db_command()
-#except sqlite3.OperationalError:
+# try:
+    # init_db_command()
+# except sqlite3.OperationalError:
     # Assume it's already been created
-    #pass
+    # pass
 
 # OAuth2 client setup
 client = WebApplicationClient(GOOGLE_CLIENT_ID)
 
 
 # Flask-Login helper to retrieve a user from our db
-#@login_manager.user_loader
-#def load_user(user_id):
-    #return User.get(user_id)
+# @login_manager.user_loader
+# def load_user(user_id):
+# return User.get(user_id)
 
 @app.route("/")
 def home():
     return render_template("home.html")
+
 
 @app.route("/protected_area")
 @login_required
@@ -76,6 +76,7 @@ def protected_area():
 
 @app.route("/login")
 def login():
+
     # Find out what URL to hit for Google login
     google_provider_cfg = get_google_provider_cfg()
     authorization_endpoint = google_provider_cfg["authorization_endpoint"]
@@ -137,8 +138,17 @@ def callback():
 
     # Create a user in our db with the information provided
     # by Google
+
+    # is_user to detect if its the first user being created
+    # First user gets auth_level = 2 (admin)
+
+    if not User.is_user():
+        acces_level = 2
+    else:
+        acces_level = 0
+
     user = User(
-        id_=unique_id, name=users_name, email=users_email, profile_pic=picture, auth_level='user'
+        id_=unique_id, name=users_name, email=users_email, profile_pic=picture, auth_level=acces_level
     )
 
     # Doesn't exist? Add to database
@@ -160,8 +170,25 @@ def logout():
     return redirect(url_for("home"))
 
 
+@app.route("/admin")
+@login_required
+def admin():
+
+    if current_user.get_auth_lvl() == 2:
+        return render_template("admin.html")
+    else:
+        return redirect(url_for("home"))
+
+
+@app.route("/manage_users")
+@login_required
+def manage_users():
+
+    if current_user.get_auth_lvl() == 2:
+        our_users = User.query.order_by(User.date_created)
+        return render_template("manage_users.html", our_users=our_users)
+    else:
+        return redirect(url_for("home"))
+
 def get_google_provider_cfg():
     return requests.get(GOOGLE_DISCOVERY_URL).json()
-
-
-

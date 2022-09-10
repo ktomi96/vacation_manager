@@ -131,3 +131,5 @@ dmypy.json
 #cert keys
 *.pem
 
+#data base
+*.db

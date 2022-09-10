@@ -1,0 +1,10 @@
+{% extends "base.html" %}
+{% block title %}User Management Page{% endblock %}
+
+{% block content %}
+<h1>This is the user management page</h1>
+<br><br><br>
+{% for our_user in our_users %}
+{{ our_user.id_ }} - {{ our_user.name }} - {{ our_user.email }} - {{ our_user.date_created }} - {{  our_user.auth_level }} <br>
+{% endfor %}
+{%  endblock %}
