@@ -1,10 +1,37 @@
-{% extends "base.html" %}
-{% block title %}User Management Page{% endblock %}
+{% extends "base.html" %} {% block title %}User Management Page{% endblock %} {%
+block content %}
 
-{% block content %}
 <h1>This is the user management page</h1>
-<br><br><br>
-{% for our_user in our_users %}
-{{ our_user.id_ }} - {{ our_user.name }} - {{ our_user.email }} - {{ our_user.date_created }} - {{  our_user.auth_level }} <br>
-{% endfor %}
-{%  endblock %}
+<br /><br /><br />
+<table>
+  <thead>
+    <th>Id</th>
+    <th>email</th>
+    <th>User name</th>
+    <th>Registation date</th>
+    <th>Acces level</th>
+    <th>Vacation Quota</th>
+    <th>Edit</th>
+  </thead>
+  <tbody>
+    {% for our_user in our_users %}
+    <tr>
+      <td>{{ our_user.id_ }}</td>
+      <td>{{ our_user.email }}</td>
+      <td>{{ our_user.name }}</td>
+      <td>{{ our_user.date_created }}</td>
+      <td>{{ our_user.auth_level }}</td>
+      <td>{{ our_user.vacation_quota }}</td>
+      <td>
+        <span>
+          <a href="/{{ our_user.id_ }}/edit">
+            <i class="bi bi-pencil-square"></i
+          ></a>
+        </span>
+      </td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+
+{% endblock %}

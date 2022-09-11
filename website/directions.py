@@ -23,6 +23,7 @@ from dotenv import load_dotenv
 # sqlachemy impl
 from website import app, login_manager, db
 from website.models import User
+from website.forms import Edit
 
 # Configuration
 load_dotenv()
@@ -148,7 +149,7 @@ def callback():
         acces_level = 0
 
     user = User(
-        id_=unique_id, name=users_name, email=users_email, profile_pic=picture, auth_level=acces_level
+        id_=unique_id, name=users_name, email=users_email, profile_pic=picture, auth_level=acces_level, vacation_quota=20
     )
 
     # Doesn't exist? Add to database
@@ -189,6 +190,29 @@ def manage_users():
         return render_template("manage_users.html", our_users=our_users)
     else:
         return redirect(url_for("home"))
+
+
+@app.route("/<int:id>/edit", methods=['GET', 'POST'])
+@login_required
+def edit(id: int):
+    if current_user.get_auth_lvl() == 2:
+        edit_user = User.query.filter_by(id_=str(id)).first()
+        form = Edit()
+        form = Edit(auth_level=edit_user.auth_level)
+        if request.method == 'POST':
+            if edit_user:
+
+                edit_user.name = request.form['name']
+                edit_user.email = request.form['email']
+                edit_user.auth_level = request.form['auth_level']
+                edit_user.vacation_quota = request.form['vacation_quota']
+                db.session.commit()
+                return redirect(url_for("manage_users"))
+        return render_template("edit.html", edit_user=edit_user, form=form, value=edit_user)
+
+    else:
+        return redirect(url_for("home"))
+
 
 def get_google_provider_cfg():
     return requests.get(GOOGLE_DISCOVERY_URL).json()

@@ -1,0 +1,22 @@
+{% extends "base.html" %} {% block title %}Admin Page{% endblock %} {% block
+content %}
+<h1>This is the edit page</h1>
+<div></div>
+<form action="/{{  edit_user.id_ }}/edit" method="POST">
+  {{ form.hidden_tag() }} 
+  {{ form.name.label(class="form-label") }} 
+  {{ form.name(class="form-control", value= edit_user.name) }}
+
+  {{ form.email.label(class="form-label") }} 
+  {{ form.email(class="form-control", value= edit_user.email) }}
+
+  {{ form.auth_level.label(class="form-label") }} 
+  {{ form.auth_level(class="form-control") }}
+
+  {{ form.vacation_quota.label(class="form-label") }} 
+  {{ form.vacation_quota(class="form-control", value= edit_user.vacation_quota) }}
+  
+  <br />
+  {{ form.submit(class="btn btn-primary") }}
+</form>
+{% endblock %}

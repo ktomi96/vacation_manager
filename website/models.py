@@ -17,6 +17,7 @@ class User(db.Model, UserMixin):
     email = db.Column(db.String(255), unique=True, nullable=False)
     profile_pic = db.Column(db.String(255), nullable=False)
     auth_level = db.Column(db.Integer(), nullable=False)
+    vacation_quota = db.Column(db.Integer(), nullable=False)
 
     def get_id(self):
         return (self.id_)
