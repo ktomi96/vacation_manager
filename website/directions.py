@@ -1,10 +1,11 @@
 # Python standard libraries
 import json
 import os
+from datetime import datetime
 
 
 # Third party libraries
-from flask import Flask, redirect, request, url_for, render_template
+from flask import Flask, redirect, request, url_for, render_template, escape
 from flask_login import (
     LoginManager,
     current_user,
@@ -22,8 +23,8 @@ from dotenv import load_dotenv
 #from user import User
 # sqlachemy impl
 from website import app, login_manager, db
-from website.models import User
-from website.forms import Edit
+from website.models import User, Vacation_request
+from website.forms import Edit, New_request
 
 # Configuration
 load_dotenv()
@@ -212,6 +213,37 @@ def edit(id: int):
 
     else:
         return redirect(url_for("home"))
+
+
+@app.route("/request_vacation")
+@login_required
+def request_vacation():
+    if current_user.get_auth_lvl() == 1 or 2:
+        user = current_user.get_self()
+
+        return render_template("request_vacation.html", user=user)
+
+
+@app.route("/<int:id>/new_request", methods=['GET', 'POST'])
+@login_required
+def new_request(id: int):
+    if current_user.get_auth_lvl() == 1 or 2:
+        user_request = User.query.filter_by(id_=str(id)).first()
+
+        form = New_request()
+        if request.method == 'POST':
+            date_format = "%Y-%m-%d"
+
+            request_from = datetime.strptime(escape(form.date_from.data), date_format)
+            request_to = datetime.strptime(escape(form.date_to.data), date_format)
+            print(request_from)
+
+            new_request = Vacation_request(
+                user_id=current_user.id_, request_from=request_from, request_to=request_to, status="PENDING")
+            db.session.add(new_request)
+            db.session.commit()
+
+        return render_template("new_request.html", form=form, user_request=user_request)
 
 
 def get_google_provider_cfg():

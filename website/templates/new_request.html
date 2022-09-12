@@ -1,0 +1,15 @@
+{% extends "base.html" %} {% block title %}New request page{% endblock %} {%
+block content %}
+<div></div>
+<form action="/{{ user_request.id_ }}/new_request" method="POST">
+  {{ form.hidden_tag() }} 
+  {{ form.date_from.label }} 
+  {{ form.date_from(class="datepicker") }}
+
+  {{ form.date_to.label }} 
+  {{ form.date_to(class="datepicker") }}
+  
+  <br />
+  {{ form.submit(class="btn btn-primary") }}
+</form>
+{% endblock %}
