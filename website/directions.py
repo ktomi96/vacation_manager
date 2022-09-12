@@ -61,19 +61,19 @@ client = WebApplicationClient(GOOGLE_CLIENT_ID)
 # @login_manager.user_loader
 # def load_user(user_id):
 # return User.get(user_id)
+def get_viewer():
+    if current_user.is_anonymous:
+        viewer = -1
+    else:
+        viewer = current_user.get_auth_lvl()
+
+    return viewer
+
 
 @app.route("/")
 def home():
-    return render_template("home.html")
-
-
-@app.route("/protected_area")
-@login_required
-def protected_area():
-    if current_user.is_authenticated:
-        return render_template("protected_area.html")
-    else:
-        return redirect(url_for("home"))
+    viewer = get_viewer()
+    return render_template("base.html", viewer=viewer)
 
 
 @app.route("/login")
@@ -162,7 +162,7 @@ def callback():
     login_user(user)
 
     # Send user back to homepage
-    return redirect(url_for("protected_area"))
+    return redirect(url_for("home"))
 
 
 @app.route("/logout", methods=['GET'])
@@ -175,9 +175,9 @@ def logout():
 @app.route("/admin")
 @login_required
 def admin():
-
+    viewer = get_viewer()
     if current_user.get_auth_lvl() == 2:
-        return render_template("admin.html")
+        return render_template("admin.html", viewer=viewer)
     else:
         return redirect(url_for("home"))
 
@@ -185,10 +185,10 @@ def admin():
 @app.route("/manage_users")
 @login_required
 def manage_users():
-
+    viewer = get_viewer()
     if current_user.get_auth_lvl() == 2:
         our_users = User.query.order_by(User.date_created)
-        return render_template("manage_users.html", our_users=our_users)
+        return render_template("manage_users.html", our_users=our_users, viewer=viewer)
     else:
         return redirect(url_for("home"))
 
@@ -196,6 +196,7 @@ def manage_users():
 @app.route("/<int:id>/edit", methods=['GET', 'POST'])
 @login_required
 def edit(id: int):
+    viewer = get_viewer()
     if current_user.get_auth_lvl() == 2:
         edit_user = User.query.filter_by(id_=str(id)).first()
         form = Edit()
@@ -209,7 +210,7 @@ def edit(id: int):
                 edit_user.vacation_quota = request.form['vacation_quota']
                 db.session.commit()
                 return redirect(url_for("manage_users"))
-        return render_template("edit.html", edit_user=edit_user, form=form, value=edit_user)
+        return render_template("edit.html", edit_user=edit_user, form=form, value=edit_user, viewer=viewer)
 
     else:
         return redirect(url_for("home"))
@@ -218,15 +219,17 @@ def edit(id: int):
 @app.route("/request_vacation")
 @login_required
 def request_vacation():
+    viewer = get_viewer()
     if current_user.get_auth_lvl() == 1 or 2:
         user = current_user.get_self()
 
-        return render_template("request_vacation.html", user=user)
+        return render_template("request_vacation.html", user=user, viewer=viewer)
 
 
 @app.route("/<int:id>/new_request", methods=['GET', 'POST'])
 @login_required
 def new_request(id: int):
+    viewer = get_viewer()
     if current_user.get_auth_lvl() == 1 or 2:
         user_request = User.query.filter_by(id_=str(id)).first()
 
@@ -234,16 +237,48 @@ def new_request(id: int):
         if request.method == 'POST':
             date_format = "%Y-%m-%d"
 
-            request_from = datetime.strptime(escape(form.date_from.data), date_format)
-            request_to = datetime.strptime(escape(form.date_to.data), date_format)
+            request_from = datetime.strptime(
+                escape(form.date_from.data), date_format)
+            request_to = datetime.strptime(
+                escape(form.date_to.data), date_format)
             print(request_from)
 
             new_request = Vacation_request(
                 user_id=current_user.id_, request_from=request_from, request_to=request_to, status="PENDING")
             db.session.add(new_request)
             db.session.commit()
+            return redirect(url_for("request_vacation"))
 
-        return render_template("new_request.html", form=form, user_request=user_request)
+        return render_template("new_request.html", form=form, user_request=user_request, viewer=viewer)
+
+
+@app.route("/<int:id>/delete", methods=['GET', 'POST'])
+@login_required
+def delete_request(id: int):
+    if current_user.get_auth_lvl() == 1 or 2:
+        user = current_user.get_self()
+        to_delete = Vacation_request.query.filter_by(id_=id).first()
+
+        can_be_deleted = False
+
+        if user.id_ == to_delete.user_id:
+            can_be_deleted = True
+        elif to_delete.status == 'ACCEPTED':
+            can_be_deleted = False
+
+        if current_user.get_auth_lvl() == 2:
+            can_be_deleted = True
+
+        if request.method == 'GET' and can_be_deleted == True:
+
+            print(to_delete)
+            db.session.delete(to_delete)
+            db.session.commit()
+
+            return redirect(url_for("request_vacation"))
+
+        else:
+            return redirect(url_for("request_vacation"))
 
 
 def get_google_provider_cfg():

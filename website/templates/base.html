@@ -31,11 +31,18 @@
       <div class="collapse navbar-collapse" id="navbar">
         <div class="navbar-nav">
           <a class="nav-item nav-link" id="home" href="/">Home</a>
+          {%  if viewer == -1 %}
           <a class="nav-item nav-link" id="login" href="/login">Login</a>
+          {%  elif viewer >= 0 %}
           <a class="nav-item nav-link" id="logout" href="/logout">Logout</a>
+          {%  if viewer >= 1 %}
           <a class="nav-item nav-link" id="request_vacation" href="/request_vacation">Vacation request</a>
+          {%  endif %}
+          {%  if viewer == 2 %}
           <a class="nav-item nav-link" id="admin" href="/admin">Admin</a>
           <a class="nav-item nav-link" id="manage_users" href="/manage_users">User Management</a>
+          {%  endif %}
+          {%  endif %}
         </div>
       </div>
     </nav>

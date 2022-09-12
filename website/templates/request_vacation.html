@@ -2,8 +2,40 @@
 block content %}
 <h1>This is the Vacation request page</h1>
 <h2 style="font-size: 24px">
-  You have{{ user.vacation_quota }} day(s) of leave left
+  You have {{ user.vacation_quota }} day(s) of leave left
 </h2>
 <br />
 <a class="btn btn-primary" href="/{{ user.id_ }}/new_request" role="new_request">Get new request</a>
+<br></br>
+{%  if user.vacation_requests %}
+    <br /><br /><br />
+    <table>
+    <thead>
+        <th>Vacation from: </th>
+        <th>Vacation to: </th>
+        <th>Status</th>
+        <th>Action</th>
+    </thead>
+    <tbody>
+    {% for request in user.vacation_requests %}
+    <tr>
+      
+      <td>{{ request.request_from }}</td>
+      <td>{{ request.request_to }}</td>
+      <td>{{ request.status }}</td>
+
+    
+      <td>
+        <span>
+          <a href="/{{ request.id_ }}/delete">
+            <i class="bi bi-trash3"></i
+          ></a>
+            </span>
+        </td>
+        </tr>
+        {% endfor %}
+    {% endif %}
+  </tbody>
+</table>
+
 {% endblock %}

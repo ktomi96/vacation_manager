@@ -35,4 +35,6 @@ class Vacation_request(db.Model):
     status = db.Column(db.String(255))
 
 
-db.create_all()
+#db.create_all()
+
+
