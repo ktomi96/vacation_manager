@@ -40,6 +40,7 @@ class Vacation_request(db.Model):
     id_ = db.Column(db.Integer(), primary_key=True)
     date_created = db.Column(db.DateTime, default=datetime.utcnow)
     user_id = db.Column(db.String(255), db.ForeignKey("user.id_"))
+    parent = db.relationship("User", back_populates="vacation_requests")
     request_from = db.Column(db.Date())
     request_to = db.Column(db.Date())
     status = db.Column(db.String(255))
