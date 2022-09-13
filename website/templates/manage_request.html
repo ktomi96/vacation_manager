@@ -1,0 +1,37 @@
+{% extends "base.html" %} {% block title %}Request Management Page{% endblock %}
+{% block content %}
+
+<h1>This is the Requests management page</h1>
+<br /><br /><br />
+<table>
+  <thead>
+    <th>Id</th>
+    <th>Request created at:</th>
+    <th>User requested</th>
+    <th>Vacation from:</th>
+    <th>Vacation to:</th>
+    <th>Request status:</th>
+    <th>Edit</th>
+  </thead>
+  <tbody>
+    {% for request in requests %}
+    <tr>
+      <td>{{ request.id_ }}</td>
+      <td>{{ request.date_created }}</td>
+      <td>{{ request.user_id }}</td>
+      <td>{{ request.request_from }}</td>
+      <td>{{ request.request_to }}</td>
+      <td>{{ request.status }}</td>
+      <td>
+        <span>
+          <a href="/{{ request.id_ }}/edit_request">
+            <i class="bi bi-pencil-square"></i
+          ></a>
+        </span>
+      </td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+
+{% endblock %}

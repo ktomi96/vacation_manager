@@ -24,7 +24,7 @@ from dotenv import load_dotenv
 # sqlachemy impl
 from website import app, login_manager, db
 from website.models import User, Vacation_request
-from website.forms import Edit, New_request
+from website.forms import Edit, New_request, Edit_request
 
 # Configuration
 load_dotenv()
@@ -279,6 +279,43 @@ def delete_request(id: int):
 
         else:
             return redirect(url_for("request_vacation"))
+
+
+@app.route("/manage_request")
+@login_required
+def manage_request():
+    viewer = get_viewer()
+    if current_user.get_auth_lvl() == 2:
+        requests = Vacation_request.query.order_by(
+            Vacation_request.date_created.desc())
+        return render_template("manage_request.html", requests=requests, viewer=viewer)
+    else:
+        return redirect(url_for("home"))
+
+
+@app.route("/<int:id>/edit_request", methods=['GET', 'POST'])
+@login_required
+def edit_request(id:int):
+    viewer = get_viewer()
+    if current_user.get_auth_lvl() == 2:
+        request_edit = Vacation_request.query.filter_by(id_=str(id)).first()
+        form = Edit_request()
+        form = Edit_request(date_from=request_edit.request_from)
+        form = Edit_request(date_to=request_edit.request_to)
+        form = Edit_request(request_status=request_edit.status)
+        if request.method == 'POST':
+            if request_edit:
+
+                request_edit.date_from = request.form['date_from']
+                request_edit.date_to = request.form['date_to']
+                request_edit.status = request.form['request_status']
+
+                db.session.commit()
+                return redirect(url_for("manage_request"))
+        return render_template("edit_request.html", request_edit=request_edit, form=form, value=request_edit, viewer=viewer)
+
+    else:
+        return redirect(url_for("home"))
 
 
 def get_google_provider_cfg():

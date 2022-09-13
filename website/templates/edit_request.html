@@ -1,0 +1,21 @@
+{% extends "base.html" %} {% block title %}Request Edit Page{% endblock %} {% block
+    content %}
+    <h1>This is Request Edit Page</h1>
+    <div></div>
+    <form action="/{{ request_edit.id_ }}/edit_request" method="POST">
+      {{ form.hidden_tag() }} 
+      {{ form.date_from.label }} 
+      {{ form.date_from(class="datepicker") }}
+    
+      {{ form.date_to.label }} 
+      {{ form.date_to(class="datepicker") }}
+
+      <br><br>
+      {{ form.request_status.label(class="form-label") }} 
+      {{ form.request_status(class="form-control") }}
+      
+      <br />
+      {{ form.submit(class="btn btn-primary") }}
+    </form>
+    {% endblock %}
+    
