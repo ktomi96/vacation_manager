@@ -1,14 +1,25 @@
 {% extends "base.html" %} {% block title %}New request page{% endblock %} {%
-block content %}
+block content %} {% for message in get_flashed_messages() %}
+<div class="alert alert-danger alert-dismissible fade show" role="alert">
+  {{ message }}
+  <button
+    type="button"
+    class="btn-close"
+    data-bs-dismiss="alert"
+    aria-label="Close"
+  ></button>
+</div>
+
+{% endfor %}
+
 <div></div>
 <form action="/{{ user_request.id_ }}/new_request" method="POST">
-  {{ form.hidden_tag() }} 
-  {{ form.date_from.label }} 
-  {{ form.date_from(class="datepicker") }}
+  <h1></h1>
+  <div></div>
+  {{ form.hidden_tag() }} {{ form.date_from.label }} {{
+  form.date_from(class="datepicker") }} {{ form.date_to.label }} {{
+  form.date_to(class="datepicker") }}
 
-  {{ form.date_to.label }} 
-  {{ form.date_to(class="datepicker") }}
-  
   <br />
   {{ form.submit(class="btn btn-primary") }}
 </form>

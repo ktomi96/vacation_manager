@@ -3,15 +3,15 @@ block content %}
 
 <h1>This is the user management page</h1>
 <br /><br /><br />
-<table>
+<table class="table">
   <thead>
-    <th>Id</th>
-    <th>email</th>
-    <th>User name</th>
-    <th>Registation date</th>
-    <th>Acces level</th>
-    <th>Vacation Quota</th>
-    <th>Edit</th>
+    <th scope="col">Id</th>
+    <th scope="col">email</th>
+    <th scope="col">User name</th>
+    <th scope="col">Registation date</th>
+    <th scope="col">Acces level</th>
+    <th scope="col">Vacation Quota</th>
+    <th scope="col">Edit</th>
   </thead>
   <tbody>
     {% for our_user in our_users %}

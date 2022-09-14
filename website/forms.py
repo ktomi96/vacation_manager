@@ -24,6 +24,6 @@ class Edit_request(FlaskForm):
     date_from = DateField("First day of the vacation", format="%Y-%m-%d")
     date_to = DateField("Last day of the vacation", format="%Y-%m-%d")
     request_status = SelectField("Request status: ", choices=[(
-        "ACCEPTED", "ACCEPTED"), ("PENDING", "PENDING"), ("CANCELED", "CANCELED")])
+        "APPROVED", "APPROVED"), ("PENDING", "PENDING"), ("CANCELED", "CANCELED")])
 
     submit = SubmitField("Submit")

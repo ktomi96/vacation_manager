@@ -35,6 +35,15 @@ class User(db.Model, UserMixin):
         user = User.query.filter_by(id_=self.id_).first()
         return user.auth_level
 
+    def leave_requests(self):
+        vacation_approved = sum([vacation.get_holidays()
+                                 for vacation in self.vacation_requests if vacation.status == "APPROVED"])
+
+        vacation_balance = {"vacation_approved": vacation_approved, "balance": (
+            self.vacation_quota - vacation_approved)}
+
+        return vacation_balance
+
 
 class Vacation_request(db.Model):
     id_ = db.Column(db.Integer(), primary_key=True)
@@ -44,6 +53,14 @@ class Vacation_request(db.Model):
     request_from = db.Column(db.Date())
     request_to = db.Column(db.Date())
     status = db.Column(db.String(255))
+
+    def get_holidays(self):
+        diff = (self.request_to - self.request_from).days + 1
+
+        return diff
+
+    def is_today(self):
+        return date.today()
 
 
 @login_manager.user_loader

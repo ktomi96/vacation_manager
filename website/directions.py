@@ -1,11 +1,11 @@
 # Python standard libraries
 import json
 import os
-from datetime import datetime
+from datetime import datetime, date
 
 
 # Third party libraries
-from flask import Flask, redirect, request, url_for, render_template, escape
+from flask import Flask, redirect, request, url_for, render_template, escape, flash
 from flask_login import (
     LoginManager,
     current_user,
@@ -172,16 +172,6 @@ def logout():
     return redirect(url_for("home"))
 
 
-@app.route("/admin")
-@login_required
-def admin():
-    viewer = get_viewer()
-    if current_user.get_auth_lvl() == 2:
-        return render_template("admin.html", viewer=viewer)
-    else:
-        return redirect(url_for("home"))
-
-
 @app.route("/manage_users")
 @login_required
 def manage_users():
@@ -241,13 +231,20 @@ def new_request(id: int):
                 escape(form.date_from.data), date_format)
             request_to = datetime.strptime(
                 escape(form.date_to.data), date_format)
-            print(request_from)
 
-            new_request = Vacation_request(
-                user_id=current_user.id_, request_from=request_from, request_to=request_to, status="PENDING")
-            db.session.add(new_request)
-            db.session.commit()
-            return redirect(url_for("request_vacation"))
+            if form.date_from.data < date.today():
+                flash("Date that you choose must be today or in the future")
+            elif ((request_to - request_from).days + 1) > user_request.leave_requests()["balance"]:
+                flash("You dont have enough balance for that")
+
+            elif request_to < request_from:
+                flash("You can't travel in the time (unless you have a Flux capacitor)")
+            else:
+                new_request = Vacation_request(
+                    user_id=current_user.id_, request_from=request_from, request_to=request_to, status="PENDING")
+                db.session.add(new_request)
+                db.session.commit()
+                return redirect(url_for("request_vacation"))
 
         return render_template("new_request.html", form=form, user_request=user_request, viewer=viewer)
 
@@ -263,7 +260,7 @@ def delete_request(id: int):
 
         if user.id_ == to_delete.user_id:
             can_be_deleted = True
-        elif to_delete.status == 'ACCEPTED':
+        elif to_delete.status == 'APPROVED':
             can_be_deleted = False
 
         if current_user.get_auth_lvl() == 2:
@@ -271,7 +268,6 @@ def delete_request(id: int):
 
         if request.method == 'GET' and can_be_deleted == True:
 
-            print(to_delete)
             db.session.delete(to_delete)
             db.session.commit()
 

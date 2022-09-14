@@ -2,19 +2,19 @@
 block content %}
 <h1>This is the Vacation request page</h1>
 <h2 style="font-size: 24px">
-  You have {{ user.vacation_quota }} day(s) of leave left
+  You have {{ user.leave_requests()["balance"] }} day(s) of leave left
 </h2>
 <br />
 <a class="btn btn-primary" href="/{{ user.id_ }}/new_request" role="new_request">Get new request</a>
 <br></br>
 {%  if user.vacation_requests %}
     <br /><br /><br />
-    <table>
+    <table class="table" >
     <thead>
-        <th>Vacation from: </th>
-        <th>Vacation to: </th>
-        <th>Status</th>
-        <th>Action</th>
+        <th scope="col">Vacation from: </th>
+        <th scope="col">Vacation to: </th>
+        <th scope="col">Status</th>
+        <th scope="col">Action</th>
     </thead>
     <tbody>
     {% for request in user.vacation_requests %}

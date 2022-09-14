@@ -3,15 +3,15 @@
 
 <h1>This is the Requests management page</h1>
 <br /><br /><br />
-<table>
+<table class="table">
   <thead>
-    <th>Id</th>
-    <th>Request created at:</th>
-    <th>User requested</th>
-    <th>Vacation from:</th>
-    <th>Vacation to:</th>
-    <th>Request status:</th>
-    <th>Edit</th>
+    <th scope="col">Id</th>
+    <th scope="col">Request created at:</th>
+    <th scope="col">User requested</th>
+    <th scope="col">Vacation from:</th>
+    <th scope="col">Vacation to:</th>
+    <th scope="col">Request status:</th>
+    <th scope="col">Edit</th>
   </thead>
   <tbody>
     {% for request in requests %}
