@@ -8,7 +8,7 @@ from datetime import datetime
 app = Flask(__name__)
 app.secret_key = os.environ.get("SECRET_KEY") or os.urandom(24)
 
-app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = True
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///data.db'
 
 db = SQLAlchemy(app)
@@ -30,7 +30,8 @@ class Vacation_request(db.Model):
     id_ = db.Column(db.Integer(), primary_key=True)
     date_created = db.Column(db.DateTime, default=datetime.utcnow)
     user_id = db.Column(db.String(255), db.ForeignKey("user.id_"))
-    parent = db.relationship("User", back_populates="vacation_requests")
+    parent = db.relationship(
+        "User", back_populates="vacation_requests", viewonly=True)
     request_from = db.Column(db.Date())
     request_to = db.Column(db.Date())
     status = db.Column(db.String(255))

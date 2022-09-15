@@ -2,7 +2,6 @@
 import json
 import os
 from datetime import datetime, date
-from tkinter.messagebox import RETRY
 
 
 # Third party libraries
@@ -17,9 +16,10 @@ from flask_login import (
 from oauthlib.oauth2 import WebApplicationClient
 import requests
 from dotenv import load_dotenv
+from flask_mail import Message
 
 # Internal imports
-from website import app, login_manager, db
+from website import app, login_manager, mail, db
 from website.models import User, Vacation_request
 from website.forms import Edit, New_request, Edit_request
 
@@ -43,7 +43,6 @@ def unauthorized():
     return "You must be logged in to access this content.", 403
 
 
-
 # OAuth2 client setup
 client = WebApplicationClient(GOOGLE_CLIENT_ID)
 
@@ -59,17 +58,26 @@ def get_viewer():
     else:
         current = current_user.get_self()
         viewer = current.auth_level
-    
-    return {"user":current, "viewer":viewer}
 
+    return {"user": current, "viewer": viewer}
+
+
+def send_email(status, email_address):
+    msg = Message("Status update", recipients=email_address)
+    msg.body = f"Your request status has been update to: {status}"
+    mail.send(msg)
+
+
+def is_weekend(day):
+    return date.weekday(day) > 4
 
 
 @app.route("/")
 def home():
     user_session = get_viewer()
-    #loops over the requests and puts them in a dict. for the calendar render
-    events = [{'title' : vacation.parent.name, 'start' : str(vacation.request_from), 'end' : str(vacation.request_to)}
-             for vacation in Vacation_request.query.filter_by(status='APPROVED').order_by(Vacation_request.request_from.asc()).all()]
+    # loops over the requests and puts them in a dict. for the calendar render
+    events = [{'title': vacation.parent.name, 'start': str(vacation.request_from), 'end': str(vacation.request_to)}
+              for vacation in Vacation_request.query.filter_by(status='APPROVED').order_by(Vacation_request.request_from.asc()).all()]
     return render_template("home.html", user_session=user_session, events=events)
 
 
@@ -186,7 +194,7 @@ def edit(id: int):
     user_session = get_viewer()
     if current_user.get_auth_lvl() == 2:
         edit_user = User.query.filter_by(id_=str(id)).first()
-        #puts the previus auth_level into form to be displayed
+        # puts the previus auth_level into form to be displayed
         form = Edit(auth_level=edit_user.auth_level)
         if request.method == 'POST':
             if edit_user:
@@ -236,6 +244,8 @@ def new_request(id: int):
 
             elif request_to < request_from:
                 flash("You can't travel in the time (unless you have a Flux capacitor)")
+            elif is_weekend(form.date_from.data) or is_weekend(form.date_to.data):
+                flash("Invalid request, must start/end with weekdays")
             else:
                 new_request = Vacation_request(
                     user_id=current_user.id_, request_from=request_from, request_to=request_to, status="PENDING")
@@ -292,9 +302,10 @@ def edit_request(id: int):
     user_session = get_viewer()
     if current_user.get_auth_lvl() == 2:
         request_edit = Vacation_request.query.filter_by(id_=str(id)).first()
-        #puts the previus date into form to be displayed
+        # puts the previus date into form to be displayed
         form = Edit_request(request_status=request_edit.status,
                             date_from=request_edit.request_from, date_to=request_edit.request_to)
+        state_was = request_edit.status
         if request.method == 'POST':
             if request_edit:
                 date_format = "%Y-%m-%d"
@@ -306,6 +317,9 @@ def edit_request(id: int):
                 request_edit.status = request.form['request_status']
 
                 db.session.commit()
+                if state_was != request_edit.status:
+                    send_email(request_edit.status, [
+                               request_edit.parent.email])
                 return redirect(url_for("manage_request"))
         return render_template("edit_request.html", request_edit=request_edit, form=form, user_session=user_session)
 

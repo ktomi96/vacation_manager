@@ -49,7 +49,8 @@ class Vacation_request(db.Model):
     id_ = db.Column(db.Integer(), primary_key=True)
     date_created = db.Column(db.DateTime, default=datetime.utcnow)
     user_id = db.Column(db.String(255), db.ForeignKey("user.id_"))
-    parent = db.relationship("User", back_populates="vacation_requests", viewonly=True)
+    parent = db.relationship(
+        "User", back_populates="vacation_requests", viewonly=True)
     request_from = db.Column(db.Date())
     request_to = db.Column(db.Date())
     status = db.Column(db.String(255))
@@ -61,9 +62,6 @@ class Vacation_request(db.Model):
 
     def is_today():
         return date.today()
-    
-    def is_weekend():
-        return datetime.today().weekday > 4
 
 
 @login_manager.user_loader
