@@ -2,6 +2,7 @@
 import json
 import os
 from datetime import datetime, date
+from tkinter.messagebox import RETRY
 
 
 # Third party libraries
@@ -18,10 +19,6 @@ import requests
 from dotenv import load_dotenv
 
 # Internal imports
-# sqlite implementaion
-#from db import init_db_command
-#from user import User
-# sqlachemy impl
 from website import app, login_manager, db
 from website.models import User, Vacation_request
 from website.forms import Edit, New_request, Edit_request
@@ -46,12 +43,6 @@ def unauthorized():
     return "You must be logged in to access this content.", 403
 
 
-# Naive database setup
-# try:
-    # init_db_command()
-# except sqlite3.OperationalError:
-    # Assume it's already been created
-    # pass
 
 # OAuth2 client setup
 client = WebApplicationClient(GOOGLE_CLIENT_ID)
@@ -64,16 +55,22 @@ client = WebApplicationClient(GOOGLE_CLIENT_ID)
 def get_viewer():
     if current_user.is_anonymous:
         viewer = -1
+        current = "Guest"
     else:
-        viewer = current_user.get_auth_lvl()
+        current = current_user.get_self()
+        viewer = current.auth_level
+    
+    return {"user":current, "viewer":viewer}
 
-    return viewer
 
 
 @app.route("/")
 def home():
-    viewer = get_viewer()
-    return render_template("base.html", viewer=viewer)
+    user_session = get_viewer()
+    #loops over the requests and puts them in a dict. for the calendar render
+    events = [{'title' : vacation.parent.name, 'start' : str(vacation.request_from), 'end' : str(vacation.request_to)}
+             for vacation in Vacation_request.query.filter_by(status='APPROVED').order_by(Vacation_request.request_from.asc()).all()]
+    return render_template("home.html", user_session=user_session, events=events)
 
 
 @app.route("/login")
@@ -175,10 +172,10 @@ def logout():
 @app.route("/manage_users")
 @login_required
 def manage_users():
-    viewer = get_viewer()
+    user_session = get_viewer()
     if current_user.get_auth_lvl() == 2:
         our_users = User.query.order_by(User.date_created)
-        return render_template("manage_users.html", our_users=our_users, viewer=viewer)
+        return render_template("manage_users.html", our_users=our_users, user_session=user_session)
     else:
         return redirect(url_for("home"))
 
@@ -186,10 +183,10 @@ def manage_users():
 @app.route("/<int:id>/edit", methods=['GET', 'POST'])
 @login_required
 def edit(id: int):
-    viewer = get_viewer()
+    user_session = get_viewer()
     if current_user.get_auth_lvl() == 2:
         edit_user = User.query.filter_by(id_=str(id)).first()
-        form = Edit()
+        #puts the previus auth_level into form to be displayed
         form = Edit(auth_level=edit_user.auth_level)
         if request.method == 'POST':
             if edit_user:
@@ -200,7 +197,7 @@ def edit(id: int):
                 edit_user.vacation_quota = request.form['vacation_quota']
                 db.session.commit()
                 return redirect(url_for("manage_users"))
-        return render_template("edit.html", edit_user=edit_user, form=form, value=edit_user, viewer=viewer)
+        return render_template("edit.html", edit_user=edit_user, form=form, value=edit_user, user_session=user_session)
 
     else:
         return redirect(url_for("home"))
@@ -209,17 +206,17 @@ def edit(id: int):
 @app.route("/request_vacation")
 @login_required
 def request_vacation():
-    viewer = get_viewer()
+    user_session = get_viewer()
     if current_user.get_auth_lvl() == 1 or 2:
         user = current_user.get_self()
 
-        return render_template("request_vacation.html", user=user, viewer=viewer)
+        return render_template("request_vacation.html", user=user, user_session=user_session)
 
 
 @app.route("/<int:id>/new_request", methods=['GET', 'POST'])
 @login_required
 def new_request(id: int):
-    viewer = get_viewer()
+    user_session = get_viewer()
     if current_user.get_auth_lvl() == 1 or 2:
         user_request = User.query.filter_by(id_=str(id)).first()
 
@@ -246,7 +243,7 @@ def new_request(id: int):
                 db.session.commit()
                 return redirect(url_for("request_vacation"))
 
-        return render_template("new_request.html", form=form, user_request=user_request, viewer=viewer)
+        return render_template("new_request.html", form=form, user_request=user_request, user_session=user_session)
 
 
 @app.route("/<int:id>/delete", methods=['GET', 'POST'])
@@ -280,11 +277,11 @@ def delete_request(id: int):
 @app.route("/manage_request")
 @login_required
 def manage_request():
-    viewer = get_viewer()
+    user_session = get_viewer()
     if current_user.get_auth_lvl() == 2:
         requests = Vacation_request.query.order_by(
             Vacation_request.date_created.desc())
-        return render_template("manage_request.html", requests=requests, viewer=viewer)
+        return render_template("manage_request.html", requests=requests, user_session=user_session)
     else:
         return redirect(url_for("home"))
 
@@ -292,9 +289,10 @@ def manage_request():
 @app.route("/<int:id>/edit_request", methods=['GET', 'POST'])
 @login_required
 def edit_request(id: int):
-    viewer = get_viewer()
+    user_session = get_viewer()
     if current_user.get_auth_lvl() == 2:
         request_edit = Vacation_request.query.filter_by(id_=str(id)).first()
+        #puts the previus date into form to be displayed
         form = Edit_request(request_status=request_edit.status,
                             date_from=request_edit.request_from, date_to=request_edit.request_to)
         if request.method == 'POST':
@@ -309,7 +307,7 @@ def edit_request(id: int):
 
                 db.session.commit()
                 return redirect(url_for("manage_request"))
-        return render_template("edit_request.html", request_edit=request_edit, form=form, viewer=viewer)
+        return render_template("edit_request.html", request_edit=request_edit, form=form, user_session=user_session)
 
     else:
         return redirect(url_for("home"))

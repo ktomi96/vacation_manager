@@ -2,5 +2,33 @@
 {% block title %}Home{% endblock %}
 
 {% block content %}
-<h1>This is the home page</h1>
+<head>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/fullcalendar@5.11.3/main.min.css" integrity="sha256-5veQuRbWaECuYxwap/IOE/DAwNxgm4ikX7nrgsqYp88=" crossorigin="anonymous">
+    <script src="https://cdn.jsdelivr.net/npm/fullcalendar@5.11.3/main.min.js" integrity="sha256-7PzqE1MyWa/IV5vZumk1CVO6OQbaJE4ns7vmxuUP/7g=" crossorigin="anonymous"></script>
+</head>
+<body>
+    <br><br>
+    <div id="calendar"></div>
+    <script>
+
+        let calendarEl = document.getElementById('calendar');
+        let calendar = new FullCalendar.Calendar(calendarEl, {
+          initialView: 'dayGridMonth', 
+          themeSystem: 'bootstrap5',
+          events: [
+          {% for event in events %}
+            {
+                title: '{{ event.title }}',
+                start: '{{ event.start }}',
+                end: '{{  event.end }}'
+            },
+            {% endfor %}
+            ]
+        });
+
+        calendar.render();
+ 
+
+    </script>
+</body>
 {%  endblock %}

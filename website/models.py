@@ -2,7 +2,7 @@ from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy import desc
 from flask_login import UserMixin
-from datetime import datetime
+from datetime import datetime, date
 
 #app = Flask(__name__)
 
@@ -37,7 +37,7 @@ class User(db.Model, UserMixin):
 
     def leave_requests(self):
         vacation_approved = sum([vacation.get_holidays()
-                                 for vacation in self.vacation_requests if vacation.status == "APPROVED"])
+                                 for vacation in self.vacation_requests if vacation.status == "APPROVED" or vacation.status == "PENDING"])
 
         vacation_balance = {"vacation_approved": vacation_approved, "balance": (
             self.vacation_quota - vacation_approved)}
@@ -49,7 +49,7 @@ class Vacation_request(db.Model):
     id_ = db.Column(db.Integer(), primary_key=True)
     date_created = db.Column(db.DateTime, default=datetime.utcnow)
     user_id = db.Column(db.String(255), db.ForeignKey("user.id_"))
-    parent = db.relationship("User", back_populates="vacation_requests")
+    parent = db.relationship("User", back_populates="vacation_requests", viewonly=True)
     request_from = db.Column(db.Date())
     request_to = db.Column(db.Date())
     status = db.Column(db.String(255))
@@ -59,8 +59,11 @@ class Vacation_request(db.Model):
 
         return diff
 
-    def is_today(self):
+    def is_today():
         return date.today()
+    
+    def is_weekend():
+        return datetime.today().weekday > 4
 
 
 @login_manager.user_loader

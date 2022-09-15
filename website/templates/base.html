@@ -44,19 +44,19 @@
             <li class="nav-item">
               <a class="nav-link active" aria-current="page" id="home" href="/">Home</a>
             </li>
-          {% if viewer == -1 %}
+          {% if user_session["viewer"] == -1 %}
             <li class="nav-item">
               <a class="nav-link active" aria-current="page" id="login" href="/login">Login</a>
             </li>
-          {% elif viewer >= 0 %}
+          {% elif user_session["viewer"] >= 0 %}
             <li class="nav-item">
               <a class="nav-link active" aria-current="page" id="logout" href="/logout">Logout</a>
             </li>
-          {% if viewer >= 1 %}
+          {% if user_session["viewer"] >= 1 %}
             <li class="nav-item">
               <a class="nav-link active" aria-current="page" id="request_vacation" href="/request_vacation">Vacation request</a>
             </li>
-          {% endif %} {% if viewer == 2 %}
+          {% endif %} {% if user_session["viewer"] == 2 %}
             <li class="nav-item">
               <a class="nav-link active" href="/manage_users">User Management</a>
             </li>
