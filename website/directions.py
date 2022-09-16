@@ -62,9 +62,9 @@ def get_viewer():
     return {"user": current, "viewer": viewer}
 
 
-def send_email(status, email_address):
+def send_email(status, email_address, name, request_from, request_to):
     msg = Message("Status update", recipients=email_address)
-    msg.body = f"Your request status has been update to: {status}"
+    msg.html = render_template("email.html", status=status, name=name, request_from=request_from, request_to=request_to)
     mail.send(msg)
 
 
@@ -76,9 +76,11 @@ def is_weekend(day):
 def home():
     user_session = get_viewer()
     # loops over the requests and puts them in a dict. for the calendar render
-    events = [{'title': vacation.parent.name, 'start': str(vacation.request_from), 'end': str(vacation.request_to)}
+    events_approved = [{'title': vacation.parent.name, 'start': str(vacation.request_from), 'end': str(vacation.request_to)}
               for vacation in Vacation_request.query.filter_by(status='APPROVED').order_by(Vacation_request.request_from.asc()).all()]
-    return render_template("home.html", user_session=user_session, events=events)
+    events_pending = [{'title': vacation.parent.name, 'start': str(vacation.request_from), 'end': str(vacation.request_to)}
+              for vacation in Vacation_request.query.filter_by(status='PENDING').order_by(Vacation_request.request_from.asc()).all()]
+    return render_template("home.html", user_session=user_session, events_approved=events_approved, events_pending=events_pending)
 
 
 @app.route("/login")
@@ -319,7 +321,7 @@ def edit_request(id: int):
                 db.session.commit()
                 if state_was != request_edit.status:
                     send_email(request_edit.status, [
-                               request_edit.parent.email])
+                               request_edit.parent.email], request_edit.parent.name, request_edit.request_from, request_edit.request_to)
                 return redirect(url_for("manage_request"))
         return render_template("edit_request.html", request_edit=request_edit, form=form, user_session=user_session)
 

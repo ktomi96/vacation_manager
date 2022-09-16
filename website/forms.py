@@ -27,3 +27,5 @@ class Edit_request(FlaskForm):
         "APPROVED", "APPROVED"), ("PENDING", "PENDING"), ("DENIED", "DENIED")])
 
     submit = SubmitField("Submit")
+
+

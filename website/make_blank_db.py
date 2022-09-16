@@ -13,6 +13,8 @@ app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///data.db'
 
 db = SQLAlchemy(app)
 
+def db_create():
+    db.create_all()
 
 class User(db.Model, UserMixin):
     id_ = db.Column(db.String(255), primary_key=True)
@@ -37,4 +39,4 @@ class Vacation_request(db.Model):
     status = db.Column(db.String(255))
 
 
-db.create_all()
+

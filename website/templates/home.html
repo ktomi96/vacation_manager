@@ -3,8 +3,8 @@
 
 {% block content %}
 <head>
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/fullcalendar@5.11.3/main.min.css" integrity="sha256-5veQuRbWaECuYxwap/IOE/DAwNxgm4ikX7nrgsqYp88=" crossorigin="anonymous">
-    <script src="https://cdn.jsdelivr.net/npm/fullcalendar@5.11.3/main.min.js" integrity="sha256-7PzqE1MyWa/IV5vZumk1CVO6OQbaJE4ns7vmxuUP/7g=" crossorigin="anonymous"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/fullcalendar@5.11.3/main.css" integrity="sha256-jLWPhwkAHq1rpueZOKALBno3eKP3m4IMB131kGhAlRQ=" crossorigin="anonymous">
+    <script src="https://cdn.jsdelivr.net/npm/fullcalendar@5.11.3/main.js" integrity="sha256-h/8r72lsgOmbQuoZKT6x3MwmqPIBN9rgiD23Bzgd2n4=" crossorigin="anonymous"></script>
 </head>
 <body>
     <br><br>
@@ -13,14 +13,29 @@
 
         let calendarEl = document.getElementById('calendar');
         let calendar = new FullCalendar.Calendar(calendarEl, {
+         
           initialView: 'dayGridMonth', 
           themeSystem: 'bootstrap5',
+          eventColor: 'green',
+          headerToolbar: {
+              left: 'prev,next today',
+              center: 'title',
+              right: 'dayGridMonth,listWeek'
+            },
           events: [
-          {% for event in events %}
+          {% for event in events_approved %}
             {
                 title: '{{ event.title }}',
                 start: '{{ event.start }}',
                 end: '{{  event.end }}'
+            },
+            {% endfor %}
+            {% for event in events_pending %}
+            {
+                title: '{{ event.title + "  pending" }}',
+                start: '{{ event.start }}',
+                end: '{{  event.end }}',
+                color: 'gray'
             },
             {% endfor %}
             ]
