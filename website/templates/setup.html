@@ -40,13 +40,16 @@
 <body>
     <h1>This is the setup page for  the enviroment variables</h1>
     <div></div>
-    <form action="/" method="POST">
+    <form action="/setup" method="POST">
     {{ form.hidden_tag() }} 
     {{ form.GOOGLE_CLIENT_ID.label(class="form-label") }} 
     {{ form.GOOGLE_CLIENT_ID(class="form-control")}}
 
     {{ form.GOOGLE_CLIENT_SECRET.label(class="form-label") }} 
     {{ form.GOOGLE_CLIENT_SECRET(class="form-control") }}
+
+    {{ form.GOOGLE_INSECURE_AUTH.label(class="form-label") }} 
+    {{ form.GOOGLE_INSECURE_AUTH(class="form-control") }}
 
     {{ form.MAIL_USERNAME.label(class="form-label") }} 
     {{ form.MAIL_USERNAME(class="form-control") }}

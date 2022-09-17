@@ -15,18 +15,16 @@ from flask_login import (
 )
 from oauthlib.oauth2 import WebApplicationClient
 import requests
-from dotenv import load_dotenv
+import dotenv
 from flask_mail import Message
 
 # Internal imports
 from website import app, login_manager, mail, db
 from website.models import User, Vacation_request
-from website.forms import Edit, New_request, Edit_request
+from website.forms import Edit, New_request, Edit_request, Setup
 
 # Configuration
-load_dotenv()
-GOOGLE_CLIENT_ID = os.getenv("GOOGLE_CLIENT_ID")
-GOOGLE_CLIENT_SECRET = os.getenv("GOOGLE_CLIENT_SECRET")
+dotenv.load_dotenv()
 GOOGLE_DISCOVERY_URL = (
     "https://accounts.google.com/.well-known/openid-configuration"
 )
@@ -41,11 +39,6 @@ GOOGLE_DISCOVERY_URL = (
 @login_manager.unauthorized_handler
 def unauthorized():
     return "You must be logged in to access this content.", 403
-
-
-# OAuth2 client setup
-client = WebApplicationClient(GOOGLE_CLIENT_ID)
-
 
 # Flask-Login helper to retrieve a user from our db
 # @login_manager.user_loader
@@ -71,9 +64,46 @@ def send_email(status, email_address, name, request_from, request_to):
 def is_weekend(day):
     return date.weekday(day) > 4
 
+dotenv_path = ".env"
+db_path = "website/data.db"
+
+app_setup = Flask(__name__, template_folder='setup_template')
+app_setup.secret_key = os.environ.get("SECRET_KEY") or os.urandom(24)
+
+
+def is_database(db_path):
+    return os.path.exists(db_path)
+
+
+def is_config(dotenv_path):
+    return os.path.exists(dotenv_path)
+
+
+def set_dotenv(dotenv_path, request):
+    dotenv.set_key(dotenv_path, "GOOGLE_CLIENT_ID",
+                   request.form['GOOGLE_CLIENT_ID'])
+    dotenv.set_key(dotenv_path, "GOOGLE_CLIENT_SECRET",
+                   request.form['GOOGLE_CLIENT_SECRET'])
+    dotenv.set_key(dotenv_path, "MAIL_USERNAME", request.form['MAIL_USERNAME'])
+    dotenv.set_key(dotenv_path, "MAIL_PASSWORD", request.form['MAIL_PASSWORD'])
+
+@app.route("/setup", methods=['GET', 'POST'])
+def setup():
+    if is_config(dotenv_path):
+       return redirect(url_for("home"))
+    form = Setup()
+    if request.method == 'POST':
+        set_dotenv(dotenv_path, request)
+        print("Done")
+        return redirect(url_for("home"))
+
+    return render_template("setup.html", form=form)
 
 @app.route("/")
 def home():
+    if not is_config(dotenv_path):
+       return redirect(url_for("setup"))
+
     user_session = get_viewer()
     # loops over the requests and puts them in a dict. for the calendar render
     events_approved = [{'title': vacation.parent.name, 'start': str(vacation.request_from), 'end': str(vacation.request_to)}
@@ -92,6 +122,7 @@ def login():
 
     # Use library to construct the request for login and provide
     # scopes that let you retrieve user's profile from Google
+    client = WebApplicationClient(os.getenv("GOOGLE_CLIENT_ID"))
     request_uri = client.prepare_request_uri(
         authorization_endpoint,
         redirect_uri=request.base_url + "/callback",
@@ -111,6 +142,7 @@ def callback():
     token_endpoint = google_provider_cfg["token_endpoint"]
 
     # Prepare and send request to get tokens! Yay tokens!
+    client = WebApplicationClient(os.getenv("GOOGLE_CLIENT_ID"))
     token_url, headers, body = client.prepare_token_request(
         token_endpoint,
         authorization_response=request.url,
@@ -121,7 +153,7 @@ def callback():
         token_url,
         headers=headers,
         data=body,
-        auth=(GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET),
+        auth=(os.getenv("GOOGLE_CLIENT_ID"), os.getenv("GOOGLE_CLIENT_SECRET")),
     )
 
     # Parse the tokens!

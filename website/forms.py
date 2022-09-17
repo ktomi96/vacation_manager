@@ -28,4 +28,14 @@ class Edit_request(FlaskForm):
 
     submit = SubmitField("Submit")
 
+class Setup(FlaskForm):
+    GOOGLE_CLIENT_ID = StringField("Give the GOOGLE_CLIENT_ID")
+    GOOGLE_CLIENT_SECRET = StringField("Give the GOOGLE_CLIENT_SECRET")
+    MAIL_USERNAME = StringField("Give the sender email address")
+    MAIL_PASSWORD = StringField(
+        "Give the password for the sender email account")
+
+    submit = SubmitField("Submit")
+
+
 
