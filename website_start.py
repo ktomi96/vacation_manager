@@ -13,7 +13,7 @@ from livereload import Server, shell
 
 
 dotenv_path = ".env"
-db_path = "website/data.db"
+db_path = "website/database/data.db"
 
 def is_database(db_path):
     return os.path.exists(db_path)

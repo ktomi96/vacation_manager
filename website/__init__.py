@@ -33,7 +33,7 @@ mail = Mail(app)
 
 # for sqlalchemy
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///data.db'
+app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///database/data.db'
 
 db = SQLAlchemy(app)
 

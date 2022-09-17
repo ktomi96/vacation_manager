@@ -65,7 +65,7 @@ def is_weekend(day):
     return date.weekday(day) > 4
 
 dotenv_path = ".env"
-db_path = "website/data.db"
+db_path = "website/database/data.db"
 
 app_setup = Flask(__name__, template_folder='setup_template')
 app_setup.secret_key = os.environ.get("SECRET_KEY") or os.urandom(24)
