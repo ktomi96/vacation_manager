@@ -31,6 +31,7 @@ class Edit_request(FlaskForm):
 class Setup(FlaskForm):
     GOOGLE_CLIENT_ID = StringField("Give the GOOGLE_CLIENT_ID")
     GOOGLE_CLIENT_SECRET = StringField("Give the GOOGLE_CLIENT_SECRET")
+    GOOGLE_INSECURE_AUTH = IntegerField("Allow insecure connection (http)")
     MAIL_USERNAME = StringField("Give the sender email address")
     MAIL_PASSWORD = StringField(
         "Give the password for the sender email account")

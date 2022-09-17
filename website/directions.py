@@ -85,6 +85,7 @@ def set_dotenv(dotenv_path, request):
     dotenv.set_key(dotenv_path, "GOOGLE_CLIENT_SECRET",
                    request.form['GOOGLE_CLIENT_SECRET'])
     dotenv.set_key(dotenv_path, "MAIL_USERNAME", request.form['MAIL_USERNAME'])
+    dotenv.set_key(dotenv_path, "OAUTHLIB_INSECURE_TRANSPORT", request.form['GOOGLE_INSECURE_AUTH'])
     dotenv.set_key(dotenv_path, "MAIL_PASSWORD", request.form['MAIL_PASSWORD'])
 
 @app.route("/setup", methods=['GET', 'POST'])
@@ -94,6 +95,7 @@ def setup():
     form = Setup()
     if request.method == 'POST':
         set_dotenv(dotenv_path, request)
+        dotenv.load_dotenv()
         print("Done")
         return redirect(url_for("home"))
 
