@@ -1,17 +1,19 @@
 
+
+
 import os
 from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import LoginManager
 from flask_mail import Mail
 from flask_mail import Message as MailMessage
-from dotenv import load_dotenv
+from website.config_init import init_dotenv
 
-load_dotenv()
+init_dotenv()
 
 # flask init
 app = Flask(__name__)
-app.secret_key = os.environ.get("SECRET_KEY") or os.urandom(24)
+app.secret_key = os.urandom(28)
 
 # flask login manager
 login_manager = LoginManager()
@@ -25,7 +27,7 @@ app.config.update(
     MAIL_USE_SSL=True,
     MAIL_USERNAME=os.getenv('MAIL_USERNAME'),
     MAIL_PASSWORD=os.getenv('MAIL_PASSWORD'),
-    MAIL_DEFAULT_SENDER=os.getenv('MAIL_USERNAME')
+    MAIL_DEFAULT_SENDER=os.getenv('MAIL_DEFAULT_SENDER')
 )
 
 mail = Mail(app)
@@ -40,5 +42,4 @@ db = SQLAlchemy(app)
 ###end init###
 ##############
 #start init###
-
 from website import directions

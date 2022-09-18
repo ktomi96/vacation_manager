@@ -15,19 +15,17 @@ from flask_login import (
 )
 from oauthlib.oauth2 import WebApplicationClient
 import requests
-import dotenv
 from flask_mail import Message
 
 # Internal imports
 from website import app, login_manager, mail, db
 from website.models import User, Vacation_request
 from website.forms import Edit, New_request, Edit_request, Setup
+from website.config_init import is_database, is_config, set_dotenv, dotenv_path, init_dotenv
 
 # Configuration
-dotenv.load_dotenv()
-GOOGLE_DISCOVERY_URL = (
-    "https://accounts.google.com/.well-known/openid-configuration"
-)
+init_dotenv()
+
 
 # Flask app setup
 
@@ -38,12 +36,15 @@ GOOGLE_DISCOVERY_URL = (
 
 @login_manager.unauthorized_handler
 def unauthorized():
-    return "You must be logged in to access this content.", 403
+    user_session = get_viewer()
+    return render_template("permission.html", user_session=user_session)
 
 # Flask-Login helper to retrieve a user from our db
 # @login_manager.user_loader
 # def load_user(user_id):
 # return User.get(user_id)
+
+
 def get_viewer():
     if current_user.is_anonymous:
         viewer = -1
@@ -57,61 +58,43 @@ def get_viewer():
 
 def send_email(status, email_address, name, request_from, request_to):
     msg = Message("Status update", recipients=email_address)
-    msg.html = render_template("email.html", status=status, name=name, request_from=request_from, request_to=request_to)
+    msg.html = render_template("email.html", status=status,
+                               name=name, request_from=request_from, request_to=request_to)
     mail.send(msg)
 
 
 def is_weekend(day):
     return date.weekday(day) > 4
 
-dotenv_path = ".env"
-db_path = "website/database/data.db"
 
-app_setup = Flask(__name__, template_folder='setup_template')
-app_setup.secret_key = os.environ.get("SECRET_KEY") or os.urandom(24)
+#app_setup = Flask(__name__, template_folder='setup_template')
+#app_setup.secret_key = os.environ.get("SECRET_KEY") or os.urandom(24)
 
-
-def is_database(db_path):
-    return os.path.exists(db_path)
-
-
-def is_config(dotenv_path):
-    return os.path.exists(dotenv_path)
-
-
-def set_dotenv(dotenv_path, request):
-    dotenv.set_key(dotenv_path, "GOOGLE_CLIENT_ID",
-                   request.form['GOOGLE_CLIENT_ID'])
-    dotenv.set_key(dotenv_path, "GOOGLE_CLIENT_SECRET",
-                   request.form['GOOGLE_CLIENT_SECRET'])
-    dotenv.set_key(dotenv_path, "MAIL_USERNAME", request.form['MAIL_USERNAME'])
-    dotenv.set_key(dotenv_path, "OAUTHLIB_INSECURE_TRANSPORT", request.form['GOOGLE_INSECURE_AUTH'])
-    dotenv.set_key(dotenv_path, "MAIL_PASSWORD", request.form['MAIL_PASSWORD'])
 
 @app.route("/setup", methods=['GET', 'POST'])
 def setup():
-    if is_config(dotenv_path):
-       return redirect(url_for("home"))
+    if is_config():
+        return redirect(url_for("home"))
     form = Setup()
     if request.method == 'POST':
-        set_dotenv(dotenv_path, request)
-        dotenv.load_dotenv()
-        print("Done")
+        set_dotenv(request)
+        init_dotenv()
         return redirect(url_for("home"))
 
     return render_template("setup.html", form=form)
 
+
 @app.route("/")
 def home():
-    if not is_config(dotenv_path):
-       return redirect(url_for("setup"))
+    if not is_config():
+        return redirect(url_for("setup"))
 
     user_session = get_viewer()
     # loops over the requests and puts them in a dict. for the calendar render
     events_approved = [{'title': vacation.parent.name, 'start': str(vacation.request_from), 'end': str(vacation.request_to)}
-              for vacation in Vacation_request.query.filter_by(status='APPROVED').order_by(Vacation_request.request_from.asc()).all()]
+                       for vacation in Vacation_request.query.filter_by(status='APPROVED').order_by(Vacation_request.request_from.asc()).all()]
     events_pending = [{'title': vacation.parent.name, 'start': str(vacation.request_from), 'end': str(vacation.request_to)}
-              for vacation in Vacation_request.query.filter_by(status='PENDING').order_by(Vacation_request.request_from.asc()).all()]
+                      for vacation in Vacation_request.query.filter_by(status='PENDING').order_by(Vacation_request.request_from.asc()).all()]
     return render_template("home.html", user_session=user_session, events_approved=events_approved, events_pending=events_pending)
 
 
@@ -155,7 +138,8 @@ def callback():
         token_url,
         headers=headers,
         data=body,
-        auth=(os.getenv("GOOGLE_CLIENT_ID"), os.getenv("GOOGLE_CLIENT_SECRET")),
+        auth=(os.getenv("GOOGLE_CLIENT_ID"),
+              os.getenv("GOOGLE_CLIENT_SECRET")),
     )
 
     # Parse the tokens!
@@ -364,4 +348,7 @@ def edit_request(id: int):
 
 
 def get_google_provider_cfg():
+    GOOGLE_DISCOVERY_URL = (
+        "https://accounts.google.com/.well-known/openid-configuration"
+    )
     return requests.get(GOOGLE_DISCOVERY_URL).json()

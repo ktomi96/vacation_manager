@@ -18,6 +18,7 @@ pyOpenSSL = "^22.0.0"
 Flask-WTF = "^1.0.1"
 Flask-Mail = "^0.9.1"
 livereload = "^2.6.3"
+email-validator = "^1.2.1"
 
 
 

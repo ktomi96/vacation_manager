@@ -2,7 +2,7 @@ from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy import desc
 from flask_login import UserMixin
-from datetime import datetime, date
+from datetime import datetime, date, timedelta
 
 #app = Flask(__name__)
 
@@ -56,9 +56,14 @@ class Vacation_request(db.Model):
     status = db.Column(db.String(255))
 
     def get_holidays(self):
-        diff = (self.request_to - self.request_from).days + 1
 
-        return diff
+        day_to_loop = datetime.combine(self.request_from, datetime.min.time())
+        day = 0
+        while day_to_loop <= datetime.combine(self.request_to, datetime.min.time()):
+            if date.weekday(day_to_loop) <= 4:
+                day += 1
+            day_to_loop = (day_to_loop + timedelta(days=1))
+        return day
 
     def is_today():
         return date.today()
