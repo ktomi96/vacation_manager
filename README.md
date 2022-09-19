@@ -38,15 +38,23 @@ To get your own api keys learn more at [Google OAuth 2.0](https://developers.goo
 
 ### Disclamer:
 
-for http connection you need to give: 1<br>
-by default email server is : 'smtp.gmail.com'<br>
+for http connection you need to give: 1
+
+by default email server is : 'smtp.gmail.com'
+
 the config is stored in database/.env
 
 ---
 
 ## Usage
 
-Every new user needs to get aproved by the admin. <br>After they get user privilege, they can view the event calendar, request new vacation, or delete requests. By default you have 20 days of vacation, admin can change it to higher number of vacation days.<br> Users will get email notification if theri request has been changed.<br>
+Every new user needs to get aproved by the admin. 
+
+After they get user privilege, they can view the event calendar, request new vacation, or delete requests. By default you have 20 days of vacation, admin can change it to higher number of vacation days.
+
+Users will get email notification if theri request has been changed.
+
+
 The guest viewer can view the calendar.
 
 Email template can be edited at /templates/email.html
