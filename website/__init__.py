@@ -5,8 +5,6 @@ import os
 from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import LoginManager
-from flask_mail import Mail
-from flask_mail import Message as MailMessage
 from website.config_init import init_dotenv
 
 init_dotenv()
@@ -20,17 +18,19 @@ login_manager = LoginManager()
 login_manager.init_app(app)
 
 # flask email
-app.config.update(
-    DEBUG=False,
-    MAIL_SERVER='smtp.gmail.com',
-    MAIL_PORT=465,
-    MAIL_USE_SSL=True,
-    MAIL_USERNAME=os.getenv('MAIL_USERNAME'),
-    MAIL_PASSWORD=os.getenv('MAIL_PASSWORD'),
-    MAIL_DEFAULT_SENDER=os.getenv('MAIL_DEFAULT_SENDER')
-)
+def init_email():
+    app.config.update(
+        DEBUG=False,
+        MAIL_SERVER='smtp.gmail.com',
+        MAIL_PORT=465,
+        MAIL_USE_SSL=True,
+        MAIL_USERNAME=os.getenv('MAIL_USERNAME'),
+        MAIL_PASSWORD=os.getenv('MAIL_PASSWORD'),
+        MAIL_DEFAULT_SENDER=os.getenv('MAIL_DEFAULT_SENDER')
+    )
 
-mail = Mail(app)
+init_email()
+    
 
 
 # for sqlalchemy

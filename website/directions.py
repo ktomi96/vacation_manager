@@ -16,9 +16,10 @@ from flask_login import (
 from oauthlib.oauth2 import WebApplicationClient
 import requests
 from flask_mail import Message
+from flask_mail import Mail
 
 # Internal imports
-from website import app, login_manager, mail, db
+from website import app, login_manager, db, init_email
 from website.models import User, Vacation_request
 from website.forms import Edit, New_request, Edit_request, Setup
 from website.config_init import is_database, is_config, set_dotenv, dotenv_path, init_dotenv
@@ -57,6 +58,7 @@ def get_viewer():
 
 
 def send_email(status, email_address, name, request_from, request_to):
+    mail = Mail(app)
     msg = Message("Status update", recipients=email_address)
     msg.html = render_template("email.html", status=status,
                                name=name, request_from=request_from, request_to=request_to)
@@ -79,6 +81,7 @@ def setup():
     if request.method == 'POST':
         set_dotenv(request)
         init_dotenv()
+        init_email()
         return redirect(url_for("home"))
 
     return render_template("setup.html", form=form)
