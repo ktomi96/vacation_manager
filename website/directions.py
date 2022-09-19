@@ -24,7 +24,7 @@ from website.models import User, Vacation_request
 from website.forms import Edit, New_request, Edit_request, Setup
 from website.config_init import is_database, is_config, set_dotenv, dotenv_path, init_dotenv
 
-# Configuration
+# Loads dotenv
 init_dotenv()
 
 
@@ -39,11 +39,6 @@ init_dotenv()
 def unauthorized():
     user_session = get_viewer()
     return render_template("permission.html", user_session=user_session)
-
-# Flask-Login helper to retrieve a user from our db
-# @login_manager.user_loader
-# def load_user(user_id):
-# return User.get(user_id)
 
 
 def get_viewer():
@@ -67,10 +62,6 @@ def send_email(status, email_address, name, request_from, request_to):
 
 def is_weekend(day):
     return date.weekday(day) > 4
-
-
-#app_setup = Flask(__name__, template_folder='setup_template')
-#app_setup.secret_key = os.environ.get("SECRET_KEY") or os.urandom(24)
 
 
 @app.route("/setup", methods=['GET', 'POST'])

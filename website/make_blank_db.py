@@ -6,15 +6,17 @@ from sqlalchemy.exc import SQLAlchemyError
 from datetime import datetime
 
 app = Flask(__name__)
-app.secret_key = os.environ.get("SECRET_KEY") or os.urandom(24)
+app.secret_key = os.urandom(24)
 
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = True
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///database/data.db'
 
 db = SQLAlchemy(app)
 
+
 def db_create():
     db.create_all()
+
 
 class User(db.Model, UserMixin):
     id_ = db.Column(db.String(255), primary_key=True)
@@ -37,6 +39,3 @@ class Vacation_request(db.Model):
     request_from = db.Column(db.Date())
     request_to = db.Column(db.Date())
     status = db.Column(db.String(255))
-
-
-

@@ -4,7 +4,6 @@ from sqlalchemy import desc
 from flask_login import UserMixin
 from datetime import datetime, date, timedelta
 
-#app = Flask(__name__)
 
 # Internal imports
 from website import app, db, login_manager
