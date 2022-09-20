@@ -28,4 +28,4 @@ jobs:
         with:
           push: true
           tags: |
-            ghcr.io/ktomi96/vacation_manager:latest
+            ghcr.io/ktomi96/vacation_manager:feature

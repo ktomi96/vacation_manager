@@ -281,8 +281,9 @@ def delete_request(id: int):
 
         if user.id_ == to_delete.user_id:
             can_be_deleted = True
-        elif to_delete.status == 'APPROVED':
+        if to_delete.status == 'APPROVED' and current_user.get_auth_lvl() == 1:
             can_be_deleted = False
+            flash("You can't delete, it has already been approved")
 
         if current_user.get_auth_lvl() == 2:
             can_be_deleted = True
