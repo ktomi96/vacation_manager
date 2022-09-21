@@ -1,5 +1,29 @@
 {% extends "base.html" %} {% block title %}Request Management Page{% endblock %}
 {% block content %}
+<script src="https://cdn.jsdelivr.net/npm/jquery@3.6.0/dist/jquery.slim.min.js" crossorigin="anonymous"></script>
+{% for message in get_flashed_messages() %}
+<script>       
+  $(function(){
+
+    $('#alert').removeClass('d-none');
+    
+    setTimeout(() => {
+      $('.alert').alert('close');
+    }, 2000);
+    
+  })
+</script>
+<div id="alert" class="alert alert-success alert-dismissible fade show" role="alert">
+  {{ message }}
+  <button
+    type="button"
+    class="btn-close"
+    data-bs-dismiss="alert"
+    aria-label="Close"
+  ></button>
+</div>
+
+{% endfor %}
 
 <h1>This is the Requests management page</h1>
 <br /><br /><br />

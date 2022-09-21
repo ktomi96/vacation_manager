@@ -2,6 +2,7 @@
 import json
 import os
 from datetime import datetime, date
+from threading import Thread
 
 
 # Third party libraries
@@ -51,14 +52,18 @@ def get_viewer():
 
     return {"user": current, "viewer": viewer}
 
+#helper function to send emails asynchronously
+def thread_email(mail, msg):
+    with app.app_context():
+        mail.send(msg)
 
 def send_email(status, email_address, name, request_from, request_to):
     mail = Mail(app)
     msg = Message("Status update", recipients=email_address)
     msg.html = render_template("email.html", status=status,
                                name=name, request_from=request_from, request_to=request_to)
-    mail.send(msg)
 
+    Thread(target=thread_email, args=(mail, msg)).start()
 
 def is_weekend(day):
     return date.weekday(day) > 4
@@ -335,6 +340,7 @@ def edit_request(id: int):
                 if state_was != request_edit.status:
                     send_email(request_edit.status, [
                                request_edit.parent.email], request_edit.parent.name, request_edit.request_from, request_edit.request_to)
+                flash("Email sent")
                 return redirect(url_for("manage_request"))
         return render_template("edit_request.html", request_edit=request_edit, form=form, user_session=user_session)
 
