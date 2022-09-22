@@ -1,8 +1,12 @@
 # Python standard libraries
 import json
 import os
+<<<<<<< HEAD
 from datetime import datetime, date
 from threading import Thread
+=======
+from datetime import datetime, date, timedelta
+>>>>>>> b211056 (The last day of the vacation wouldnt render properly on fullcalendar, couldnt figure a way to fix it in fullcalendar, so i fixed when the dictionary is feed to fullcalendar.)
 
 
 # Third party libraries
@@ -68,6 +72,18 @@ def send_email(status, email_address, name, request_from, request_to):
 def is_weekend(day):
     return date.weekday(day) > 4
 
+#fullcalendar not rendering end day of the request, only showing the previus day, there wasnt any settinh in fullcallendar that would help.
+def calendar_helper(vacation):
+    if vacation.request_from == vacation.request_to:
+        return vacation.request_to
+    else:
+        date_format = "%Y-%m-%d %H:%M:%S"
+
+        date_format = datetime.combine(vacation.request_to, datetime.min.time())
+        date_add = (date_format + timedelta(days=1))
+
+        return datetime.strptime(str(date_add), '%Y-%m-%d %H:%M:%S')
+
 
 @app.route("/setup", methods=['GET', 'POST'])
 def setup():
@@ -90,9 +106,9 @@ def home():
 
     user_session = get_viewer()
     # loops over the requests and puts them in a dict. for the calendar render
-    events_approved = [{'title': vacation.parent.name, 'start': str(vacation.request_from), 'end': str(vacation.request_to)}
+    events_approved = [{'title': vacation.parent.name, 'start': str(vacation.request_from), 'end': str(calendar_helper(vacation))}
                        for vacation in Vacation_request.query.filter_by(status='APPROVED').order_by(Vacation_request.request_from.asc()).all()]
-    events_pending = [{'title': vacation.parent.name, 'start': str(vacation.request_from), 'end': str(vacation.request_to)}
+    events_pending = [{'title': vacation.parent.name, 'start': str(vacation.request_from), 'end': str(calendar_helper(vacation))}
                       for vacation in Vacation_request.query.filter_by(status='PENDING').order_by(Vacation_request.request_from.asc()).all()]
     return render_template("home.html", user_session=user_session, events_approved=events_approved, events_pending=events_pending)
 
