@@ -1,12 +1,8 @@
 # Python standard libraries
 import json
 import os
-<<<<<<< HEAD
-from datetime import datetime, date
-from threading import Thread
-=======
 from datetime import datetime, date, timedelta
->>>>>>> b211056 (The last day of the vacation wouldnt render properly on fullcalendar, couldnt figure a way to fix it in fullcalendar, so i fixed when the dictionary is feed to fullcalendar.)
+from threading import Thread
 
 
 # Third party libraries
