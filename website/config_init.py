@@ -17,7 +17,7 @@ def is_config():
     return os.path.exists(dotenv_path)
 
 
-def set_dotenv(request):
+def set_dotenv_google(request):
     dotenv.set_key(dotenv_path, "GOOGLE_CLIENT_ID",
                    request.form['GOOGLE_CLIENT_ID'])
 
@@ -31,3 +31,19 @@ def set_dotenv(request):
     dotenv.set_key(dotenv_path, "MAIL_PASSWORD", request.form['MAIL_PASSWORD'])
     dotenv.set_key(dotenv_path, "MAIL_DEFAULT_SENDER",
                    request.form['MAIL_USERNAME'])
+    dotenv.set_key(dotenv_path, "login_type", "GOOGLE")
+
+
+def set_dotenv_microsoft(request):
+    dotenv.set_key(dotenv_path, "tenant_name",
+                   request.form['tenant_name'])
+
+    dotenv.set_key(dotenv_path, "client_id",
+                   request.form['client_id'])
+
+    dotenv.set_key(dotenv_path, "client_secret", request.form['client_secret'])
+    dotenv.set_key(dotenv_path, "MAIL_USERNAME", request.form['MAIL_USERNAME'])
+    dotenv.set_key(dotenv_path, "MAIL_PASSWORD", request.form['MAIL_PASSWORD'])
+    dotenv.set_key(dotenv_path, "MAIL_DEFAULT_SENDER",
+                   request.form['MAIL_USERNAME'])
+    dotenv.set_key(dotenv_path, "login_type", "MICROSOFT")

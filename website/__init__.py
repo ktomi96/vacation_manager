@@ -3,6 +3,7 @@ from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import LoginManager
 from website.config_init import init_dotenv
+from authlib.integrations.flask_client import OAuth
 
 init_dotenv()
 
@@ -28,6 +29,8 @@ def init_email():
 
 init_email()
     
+#ouath
+oauth = OAuth(app)
 
 
 # for sqlalchemy

@@ -40,14 +40,26 @@
 <body>
     <h1>This is the setup page for  the enviroment variables</h1>
     <div></div>
-    <form action="/setup" method="POST">
-    {{ form.hidden_tag() }}
-    {{ form.loggin_type.label(class="form-label") }} 
-    {{ form.loggin_type(class="form-control") }}
-    
-    <br />
-    {{ form.submit(class="btn btn-primary") }}
-    </form>
+      <form action="/setup_microsoft" method="POST">
+      {{ form.hidden_tag() }} 
+      {{ form.tenant_name.label(class="form-label") }} 
+      {{ form.tenant_name(class="form-control")}}
+
+      {{ form.client_id.label(class="form-label") }} 
+      {{ form.client_id(class="form-control") }}
+
+      {{ form.client_secret.label(class="form-label") }} 
+      {{ form.client_secret(class="form-control") }}
+
+      {{ form.MAIL_USERNAME.label(class="form-label") }} 
+      {{ form.MAIL_USERNAME(class="form-control") }}
+
+      {{ form.MAIL_PASSWORD.label(class="form-label") }} 
+      {{ form.MAIL_PASSWORD(class="form-control") }}
+      
+      <br />
+      {{ form.submit(class="btn btn-primary") }}
+      </form>
 
     
 </body>

@@ -6,7 +6,7 @@ from threading import Thread
 
 
 # Third party libraries
-from flask import Flask, redirect, request, url_for, render_template, escape, flash
+from flask import Flask, redirect, request, url_for, render_template, escape, flash, session
 from flask_login import (
     LoginManager,
     current_user,
@@ -14,16 +14,17 @@ from flask_login import (
     login_user,
     logout_user,
 )
-from oauthlib.oauth2 import WebApplicationClient
+#from oauthlib.oauth2 import WebApplicationClient
+from authlib.integrations.flask_client import OAuth
 import requests
 from flask_mail import Message
 from flask_mail import Mail
 
 # Internal imports
-from website import app, login_manager, db, init_email
+from website import app, login_manager, db, init_email, oauth
 from website.models import User, Vacation_request
-from website.forms import Edit, New_request, Edit_request, Setup
-from website.config_init import is_database, is_config, set_dotenv, dotenv_path, init_dotenv
+from website.forms import Edit, New_request, Edit_request, Google_setup, Microsoft_setup, Init_setup
+from website.config_init import is_database, is_config, set_dotenv_google, set_dotenv_microsoft, dotenv_path, init_dotenv
 
 # Loads dotenv
 init_dotenv()
@@ -52,10 +53,13 @@ def get_viewer():
 
     return {"user": current, "viewer": viewer}
 
-#helper function to send emails asynchronously
+# helper function to send emails asynchronously
+
+
 def thread_email(mail, msg):
     with app.app_context():
         mail.send(msg)
+
 
 def send_email(status, email_address, name, request_from, request_to):
     mail = Mail(app)
@@ -65,17 +69,21 @@ def send_email(status, email_address, name, request_from, request_to):
 
     Thread(target=thread_email, args=(mail, msg)).start()
 
+
 def is_weekend(day):
     return date.weekday(day) > 4
 
-#fullcalendar not rendering end day of the request, only showing the previus day, there wasnt any settinh in fullcallendar that would help.
+# fullcalendar not rendering end day of the request, only showing the previus day, there wasnt any settinh in fullcallendar that would help.
+
+
 def calendar_helper(vacation):
     if vacation.request_from == vacation.request_to:
         return vacation.request_to
     else:
         date_format = "%Y-%m-%d %H:%M:%S"
 
-        date_format = datetime.combine(vacation.request_to, datetime.min.time())
+        date_format = datetime.combine(
+            vacation.request_to, datetime.min.time())
         date_add = (date_format + timedelta(days=1))
 
         return datetime.strptime(str(date_add), '%Y-%m-%d %H:%M:%S')
@@ -85,14 +93,48 @@ def calendar_helper(vacation):
 def setup():
     if is_config():
         return redirect(url_for("home"))
-    form = Setup()
+
+    init_form = Init_setup()
+
+    if request.method == 'POST' and request.form["loggin_type"] == "GOOGLE":
+        return redirect(url_for("setup_google"))
+
+    if request.method == 'POST' and request.form["loggin_type"] == "MICROSOFT":
+        return redirect(url_for("setup_microsoft"))
+
+    return render_template("setup.html", form=init_form)
+
+
+@app.route("/setup_google", methods=['GET', 'POST'])
+def setup_google():
+    if is_config():
+        return redirect(url_for("home"))
+
+    google_form = Google_setup()
+
     if request.method == 'POST':
-        set_dotenv(request)
+        set_dotenv_google(request)
         init_dotenv()
         init_email()
         return redirect(url_for("home"))
 
-    return render_template("setup.html", form=form)
+    return render_template("setup_google.html", form=google_form)
+
+
+@app.route("/setup_microsoft", methods=['GET', 'POST'])
+def setup_microsoft():
+    if is_config():
+        return redirect(url_for("home"))
+
+    microsoft_form = Microsoft_setup()
+
+    if request.method == 'POST':
+        set_dotenv_microsoft(request)
+        init_dotenv()
+        init_email()
+        return redirect(url_for("home"))
+
+    return render_template("setup_microsoft.html", form=microsoft_form)
 
 
 @app.route("/")
@@ -111,66 +153,97 @@ def home():
 
 @app.route("/login")
 def login():
-
-    # Find out what URL to hit for Google login
-    google_provider_cfg = get_google_provider_cfg()
-    authorization_endpoint = google_provider_cfg["authorization_endpoint"]
-
-    # Use library to construct the request for login and provide
-    # scopes that let you retrieve user's profile from Google
-    client = WebApplicationClient(os.getenv("GOOGLE_CLIENT_ID"))
-    request_uri = client.prepare_request_uri(
-        authorization_endpoint,
-        redirect_uri=request.base_url + "/callback",
-        scope=["openid", "email", "profile"],
-    )
-    return redirect(request_uri)
+    user_session = get_viewer()
+    loggin_type = os.getenv("login_type")
+    return render_template("login.html", user_session=user_session, loggin_type=loggin_type)
 
 
-@app.route("/login/callback")
-def callback():
-    # Get authorization code Google sent back to you
-    code = request.args.get("code")
+@app.route("/microsoft_login")
+def microsoft_login():
 
-    # Find out what URL to hit to get tokens that allow you to ask for
-    # things on behalf of a user
-    google_provider_cfg = get_google_provider_cfg()
-    token_endpoint = google_provider_cfg["token_endpoint"]
+    tenant_name = os.getenv("tenant_name")
 
-    # Prepare and send request to get tokens! Yay tokens!
-    client = WebApplicationClient(os.getenv("GOOGLE_CLIENT_ID"))
-    token_url, headers, body = client.prepare_token_request(
-        token_endpoint,
-        authorization_response=request.url,
-        redirect_url=request.base_url,
-        code=code,
-    )
-    token_response = requests.post(
-        token_url,
-        headers=headers,
-        data=body,
-        auth=(os.getenv("GOOGLE_CLIENT_ID"),
-              os.getenv("GOOGLE_CLIENT_SECRET")),
+    url_auth = f'https://login.microsoftonline.com/{tenant_name}/v2.0/.well-known/openid-configuration'
+    oauth.register(
+        name='microsoft',
+        provider='microsoft',
+        client_id=os.getenv("client_id"),
+        client_secret=os.getenv("client_secret"),
+        server_metadata_url=url_auth,
+        client_kwargs={'scope': 'openid profile email'}
     )
 
-    # Parse the tokens!
-    client.parse_request_body_response(json.dumps(token_response.json()))
+    redirect_uri = url_for('microsoft_callback', _external=True)
+    return oauth.microsoft.authorize_redirect(redirect_uri)
 
-    # Now that we have tokens (yay) let's find and hit URL
-    # from Google that gives you user's profile information,
-    # including their Google Profile Image and Email
-    userinfo_endpoint = google_provider_cfg["userinfo_endpoint"]
-    uri, headers, body = client.add_token(userinfo_endpoint)
-    userinfo_response = requests.get(uri, headers=headers, data=body)
 
-    # We want to make sure their email is verified.
-    # The user authenticated with Google, authorized our
-    # app, and now we've verified their email through Google!
-    if userinfo_response.json().get("email_verified"):
-        unique_id = userinfo_response.json()["sub"]
-        users_email = userinfo_response.json()["email"]
-        picture = userinfo_response.json()["picture"]
-        users_name = userinfo_response.json()["given_name"]
+@app.route("/microsoft_login/callback")
+def microsoft_callback():
+    token = oauth.microsoft.authorize_access_token()
+
+    userinfo = token['userinfo']
+
+    unique_id = userinfo["sub"]
+    users_email = userinfo["email"]
+    # couldn't figure out how to get  profile_pic with only openid
+    picture = 'none'
+    users_name = userinfo["name"]
+
+    # Create a user in our db with the information provided
+    # by Azure
+
+    # is_user to detect if its the first user being created
+    # First user gets auth_level = 2 (admin)
+
+    if not User.is_user():
+        acces_level = 2
+    else:
+        acces_level = 0
+
+    user = User(
+        id_=unique_id, name=users_name, email=users_email, profile_pic=picture, auth_level=acces_level, vacation_quota=20
+    )
+
+    # Doesn't exist? Add to database
+    if not User.query.get(unique_id):
+        db.session.add(user)
+        db.session.commit()
+
+    # Begin user session by logging the user in
+    login_user(user)
+
+    # Send user back to homepage
+    return redirect(url_for("home"))
+
+
+@app.route("/google_login")
+def google_login():
+    CONF_URL = 'https://accounts.google.com/.well-known/openid-configuration'
+    app.config["GOOGLE_CLIENT_ID"] = os.getenv("GOOGLE_CLIENT_ID")
+    app.config["GOOGLE_CLIENT_SECRET"] = os.getenv("GOOGLE_CLIENT_SECRET")
+
+    oauth.register(
+        name='google',
+        server_metadata_url=CONF_URL,
+        client_kwargs={
+            'scope': 'openid email profile'
+        }
+    )
+
+    redirect_uri = url_for('google_callback', _external=True)
+    return oauth.google.authorize_redirect(redirect_uri)
+
+
+@app.route("/google_login/callback")
+def google_callback():
+    token = oauth.google.authorize_access_token()
+    userinfo = token['userinfo']
+
+    if userinfo["email_verified"]:
+        unique_id = userinfo["sub"]
+        users_email = userinfo["email"]
+        picture = userinfo["picture"]
+        users_name = userinfo["name"]
     else:
         return "User email not available or not verified by Google.", 400
 
@@ -219,12 +292,12 @@ def manage_users():
         return redirect(url_for("home"))
 
 
-@app.route("/<int:id>/edit", methods=['GET', 'POST'])
+@app.route("/<id>/edit", methods=['GET', 'POST'])
 @login_required
-def edit(id: int):
+def edit(id: str):
     user_session = get_viewer()
     if current_user.get_auth_lvl() == 2:
-        edit_user = User.query.filter_by(id_=str(id)).first()
+        edit_user = User.query.filter_by(id_=id).first()
         # puts the previus auth_level into form to be displayed
         form = Edit(auth_level=edit_user.auth_level)
         if request.method == 'POST':
@@ -252,12 +325,12 @@ def request_vacation():
         return render_template("request_vacation.html", user=user, user_session=user_session)
 
 
-@app.route("/<int:id>/new_request", methods=['GET', 'POST'])
+@app.route("/<id>/new_request", methods=['GET', 'POST'])
 @login_required
-def new_request(id: int):
+def new_request(id: str):
     user_session = get_viewer()
     if current_user.get_auth_lvl() == 1 or 2:
-        user_request = User.query.filter_by(id_=str(id)).first()
+        user_request = User.query.filter_by(id_=id).first()
 
         form = New_request()
         if request.method == 'POST':
@@ -287,9 +360,9 @@ def new_request(id: int):
         return render_template("new_request.html", form=form, user_request=user_request, user_session=user_session)
 
 
-@app.route("/<int:id>/delete", methods=['GET', 'POST'])
+@app.route("/<id>/delete", methods=['GET', 'POST'])
 @login_required
-def delete_request(id: int):
+def delete_request(id: str):
     if current_user.get_auth_lvl() == 1 or 2:
         user = current_user.get_self()
         to_delete = Vacation_request.query.filter_by(id_=id).first()
@@ -328,12 +401,12 @@ def manage_request():
         return redirect(url_for("home"))
 
 
-@app.route("/<int:id>/edit_request", methods=['GET', 'POST'])
+@app.route("/<id>/edit_request", methods=['GET', 'POST'])
 @login_required
-def edit_request(id: int):
+def edit_request(id: str):
     user_session = get_viewer()
     if current_user.get_auth_lvl() == 2:
-        request_edit = Vacation_request.query.filter_by(id_=str(id)).first()
+        request_edit = Vacation_request.query.filter_by(id_=id).first()
         # puts the previus date into form to be displayed
         form = Edit_request(request_status=request_edit.status,
                             date_from=request_edit.request_from, date_to=request_edit.request_to)
@@ -358,10 +431,3 @@ def edit_request(id: int):
 
     else:
         return redirect(url_for("home"))
-
-
-def get_google_provider_cfg():
-    GOOGLE_DISCOVERY_URL = (
-        "https://accounts.google.com/.well-known/openid-configuration"
-    )
-    return requests.get(GOOGLE_DISCOVERY_URL).json()

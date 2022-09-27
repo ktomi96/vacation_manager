@@ -14,4 +14,4 @@ if __name__ == "__main__":
 
     server = Server(app.wsgi_app)
     server.watch('.env')
-    server.serve()
+    server.serve(host='localhost')

@@ -35,13 +35,33 @@ class Edit_request(FlaskForm):
     submit = SubmitField("Submit")
 
 
-class Setup(FlaskForm):
+class Init_setup(FlaskForm):
+    loggin_type = SelectField("Login provider: ", choices=[("GOOGLE", "GOOGLE"), ("MICROSOFT", "MICROSOFT")], validators=[
+                              InputRequired(), AnyOf(["GOOGLE", "MICROSOFT"])])
+    submit = SubmitField("Submit")
+
+class Google_setup(FlaskForm):
     GOOGLE_CLIENT_ID = StringField(
         "Give the GOOGLE_CLIENT_ID", validators=[InputRequired(), Length(min=73)])
     GOOGLE_CLIENT_SECRET = StringField(
         "Give the GOOGLE_CLIENT_SECRET", validators=[InputRequired(), Length(min=35)])
     GOOGLE_INSECURE_AUTH = IntegerField(
         "Allow insecure connection (http)", validators=[InputRequired(), NumberRange(min=0, max=1)])
+    MAIL_USERNAME = StringField(
+        "Give the sender email address", validators=[InputRequired(), Email()])
+    MAIL_PASSWORD = StringField(
+        "Give the password for the sender email account", validators=[InputRequired()])
+
+    submit = SubmitField("Submit")
+
+
+class Microsoft_setup(FlaskForm):
+    tenant_name = StringField(
+        "Give the tenant id", validators=[InputRequired(), Length(min=20)])
+    client_id = StringField(
+        "Give the client id", validators=[InputRequired(), Length(min=20)])
+    client_secret = StringField(
+        "Give the clien secret", validators=[InputRequired(), Length(min=20)])
     MAIL_USERNAME = StringField(
         "Give the sender email address", validators=[InputRequired(), Email()])
     MAIL_PASSWORD = StringField(

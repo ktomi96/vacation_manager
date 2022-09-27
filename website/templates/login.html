@@ -1,6 +1,12 @@
-{% extends "base.html" %}
-{% block title %}Login{% endblock %}
-
+{% extends "base.html" %} {% block title %}Login{% endblock %} 
 {% block content %}
-<h1>This is the Login page</h1>
-{%  endblock %}
+  <h1>This is the Login page</h1>
+  <div>
+  {% if loggin_type == "GOOGLE" %}
+    <a class="btn btn-primary" href="/google_login" role="button">Google login</a>
+  {%  endif %}
+  {% if loggin_type == "MICROSOFT" %}
+    <a class="btn btn-primary" href="/microsoft_login" role="button">Microsoft login</a>
+  {%  endif %}
+  </div>
+{% endblock %}
