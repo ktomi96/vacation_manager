@@ -1,12 +1,10 @@
 name: Publish Docker image
 
-
 on:
   push:
-    branches: [ "*" ]
+    branches: ["*"]
   pull_request:
-    branches: [ "*" ]
-
+    branches: ["*"]
 
 jobs:
   publish-docker-image:
@@ -28,4 +26,4 @@ jobs:
         with:
           push: true
           tags: |
-            ghcr.io/ktomi96/vacation_manager:feature
+            ghcr.io/ktomi96/vacation_manager:latest
